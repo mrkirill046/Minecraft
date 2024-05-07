@@ -22,11 +22,16 @@ using namespace glm;
 #include "LineBatch.h"
 #include "file.h"
 #include "png_loading.h"
+#include "Lightmap.h"
+#include "LightSolver.h"
+#include "Lighting.h"
+#include "Block.h"
 
 int WIDTH = 1280;
 int HEIGHT = 720;
 
 float vertices[] = {
+    // x    y
    -0.01f,-0.01f,
     0.01f, 0.01f,
 
@@ -35,7 +40,7 @@ float vertices[] = {
 };
 
 int attrs[] = {
-        2,  0
+        2,  0 //null terminator
 };
 
 int main() {
@@ -63,7 +68,7 @@ int main() {
         return 1;
     }
 
-    Texture* texture = load_texture("minecraft_textures_atlas_blocks.png");
+    Texture* texture = load_texture("blocks_minecraft.png");
     if (texture == nullptr) {
         std::cerr << "failed to load texture" << std::endl;
         delete shader;
@@ -71,14 +76,51 @@ int main() {
         return 1;
     }
 
-    Chunks* chunks = new Chunks(16, 8, 16);
+    {
+        // AIR
+        Block* block = new Block(0, 0);
+        block->drawGroup = 1;
+        block->lightPassing = true;
+        Block::blocks[block->id] = block;
+
+        // STONE
+        block = new Block(1, 2);
+        Block::blocks[block->id] = block;
+
+        // GRASS
+        block = new Block(2, 4);
+        block->textureFaces[2] = 2;
+        block->textureFaces[3] = 1;
+        Block::blocks[block->id] = block;
+
+        // LAMP
+        block = new Block(3, 3);
+        block->emission[0] = 10;
+        block->emission[1] = 0;
+        block->emission[2] = 0;
+        Block::blocks[block->id] = block;
+
+        // WOOD
+        block = new Block(4, 5);
+        block->drawGroup = 2;
+        block->lightPassing = true;
+        Block::blocks[block->id] = block;
+
+        // GLASS
+        block = new Block(5, 6);
+        Block::blocks[block->id] = block;
+    }
+
+    Chunks* chunks = new Chunks(16, 16, 16);
     Mesh** meshes = new Mesh * [chunks->volume];
     for (size_t i = 0; i < chunks->volume; i++)
         meshes[i] = nullptr;
     VoxelRenderer renderer(1024 * 1024 * 8);
     LineBatch* lineBatch = new LineBatch(4096);
 
-    glClearColor(0.6f, 0.62f, 0.65f, 1);
+    Lighting::initialize(chunks);
+
+    glClearColor(0.0f, 0.0f, 0.0f, 1);
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
@@ -86,7 +128,7 @@ int main() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     Mesh* crosshair = new Mesh(vertices, 4, attrs);
-    Camera* camera = new Camera(vec3(0, 0, 20), radians(90.0f));
+    Camera* camera = new Camera(vec3(96, 16, 96), radians(90.0f));
 
     float lastTime = glfwGetTime();
     float delta = 0.0f;
@@ -94,43 +136,56 @@ int main() {
     float camX = 0.0f;
     float camY = 0.0f;
 
-    float speed = 50;
+    float speed = 15;
+
+    int choosenBlock = 1;
+
+    Lighting::onWorldLoaded();
 
     while (!Window::isShouldClose()) {
         float currentTime = glfwGetTime();
         delta = currentTime - lastTime;
         lastTime = currentTime;
 
-        if (Events::justPressed(GLFW_KEY_ESCAPE)) {
+        if (Events::jpressed(GLFW_KEY_ESCAPE)) {
             Window::setShouldClose(true);
         }
-        if (Events::justPressed(GLFW_KEY_TAB)) {
+        if (Events::jpressed(GLFW_KEY_TAB)) {
             Events::toogleCursor();
         }
-        if (Events::justPressed(GLFW_KEY_F1)) {
+
+        for (int i = 1; i < 6; i++) {
+            if (Events::jpressed(GLFW_KEY_0 + i)) {
+                choosenBlock = i;
+            }
+        }
+        if (Events::jpressed(GLFW_KEY_F1)) {
             unsigned char* buffer = new unsigned char[chunks->volume * CHUNK_VOL];
             chunks->write(buffer);
             write_binary_file("world.bin", (const char*)buffer, chunks->volume * CHUNK_VOL);
             delete[] buffer;
             std::cout << "world saved in " << (chunks->volume * CHUNK_VOL) << " bytes" << std::endl;
         }
-        if (Events::justPressed(GLFW_KEY_F2)) {
+        if (Events::jpressed(GLFW_KEY_F2)) {
             unsigned char* buffer = new unsigned char[chunks->volume * CHUNK_VOL];
             read_binary_file("world.bin", (char*)buffer, chunks->volume * CHUNK_VOL);
             chunks->read(buffer);
             delete[] buffer;
+
+            Lighting::clear();
+            Lighting::onWorldLoaded();
         }
 
-        if (Events::isPressed(GLFW_KEY_W)) {
+        if (Events::pressed(GLFW_KEY_W)) {
             camera->position += camera->front * delta * speed;
         }
-        if (Events::isPressed(GLFW_KEY_S)) {
+        if (Events::pressed(GLFW_KEY_S)) {
             camera->position -= camera->front * delta * speed;
         }
-        if (Events::isPressed(GLFW_KEY_D)) {
+        if (Events::pressed(GLFW_KEY_D)) {
             camera->position += camera->right * delta * speed;
         }
-        if (Events::isPressed(GLFW_KEY_A)) {
+        if (Events::pressed(GLFW_KEY_A)) {
             camera->position -= camera->right * delta * speed;
         }
 
@@ -157,11 +212,19 @@ int main() {
             if (vox != nullptr) {
                 lineBatch->box(iend.x + 0.5f, iend.y + 0.5f, iend.z + 0.5f, 1.005f, 1.005f, 1.005f, 0, 0, 0, 0.5f);
 
-                if (Events::justClicked(GLFW_MOUSE_BUTTON_1)) {
-                    chunks->set((int)iend.x, (int)iend.y, (int)iend.z, 0);
+                if (Events::jclicked(GLFW_MOUSE_BUTTON_1)) {
+                    int x = (int)iend.x;
+                    int y = (int)iend.y;
+                    int z = (int)iend.z;
+                    chunks->set(x, y, z, 0);
+                    Lighting::onBlockSet(x, y, z, 0);
                 }
-                if (Events::justClicked(GLFW_MOUSE_BUTTON_2)) {
-                    chunks->set((int)(iend.x) + (int)(norm.x), (int)(iend.y) + (int)(norm.y), (int)(iend.z) + (int)(norm.z), 2);
+                if (Events::jclicked(GLFW_MOUSE_BUTTON_2)) {
+                    int x = (int)(iend.x) + (int)(norm.x);
+                    int y = (int)(iend.y) + (int)(norm.y);
+                    int z = (int)(iend.z) + (int)(norm.z);
+                    chunks->set(x, y, z, choosenBlock);
+                    Lighting::onBlockSet(x, y, z, choosenBlock);
                 }
             }
         }
@@ -192,7 +255,7 @@ int main() {
                 oz += 1;
                 closes[(oy * 3 + oz) * 3 + ox] = other;
             }
-            Mesh* mesh = renderer.render(chunk, (const Chunk**)closes, true);
+            Mesh* mesh = renderer.render(chunk, (const Chunk**)closes);
             meshes[i] = mesh;
         }
 
@@ -220,8 +283,10 @@ int main() {
         lineBatch->render();
 
         Window::swapBuffers();
-        Events::pollEvents();
+        Events::pullEvents();
     }
+
+    Lighting::finalize();
 
     delete shader;
     delete texture;

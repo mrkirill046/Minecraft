@@ -77,24 +77,24 @@ int Events::initialize(){
 	return 0;
 }
 
-bool Events::isPressed(int keycode){
+bool Events::pressed(int keycode){
 	if (keycode < 0 || keycode >= _MOUSE_BUTTONS)
 		return false;
 	return _keys[keycode];
 }
 
-bool Events::justPressed(int keycode){
+bool Events::jpressed(int keycode){
 	if (keycode < 0 || keycode >= _MOUSE_BUTTONS)
 		return false;
 	return _keys[keycode] && _frames[keycode] == _current;
 }
 
-bool Events::isClicked(int button){
+bool Events::clicked(int button){
 	int index = _MOUSE_BUTTONS+button;
 	return _keys[index];
 }
 
-bool Events::justClicked(int button){
+bool Events::jclicked(int button){
 	int index = _MOUSE_BUTTONS+button;
 	return _keys[index] && _frames[index] == _current;
 }
@@ -104,7 +104,7 @@ void Events::toogleCursor(){
 	Window::setCursorMode(_cursor_locked ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
 }
 
-void Events::pollEvents(){
+void Events::pullEvents(){
 	_current++;
 	deltaX = 0.0f;
 	deltaY = 0.0f;

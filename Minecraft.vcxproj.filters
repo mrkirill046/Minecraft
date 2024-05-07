@@ -49,6 +49,12 @@
     <Filter Include="Файлы заголовков\Files">
       <UniqueIdentifier>{ad98ab3f-84e7-4585-acec-8a02c5d39547}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Исходные файлы\Lighting">
+      <UniqueIdentifier>{dea5a005-a204-4ce8-b63d-0a2653c670a5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы заголовков\Lighting">
+      <UniqueIdentifier>{e96f7a6f-1963-4bc8-8d5d-8f56c7ad538b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Engine.cpp">
@@ -93,6 +99,18 @@
     <ClCompile Include="file.cpp">
       <Filter>Исходные файлы\Files</Filter>
     </ClCompile>
+    <ClCompile Include="LightSolver.cpp">
+      <Filter>Исходные файлы\Lighting</Filter>
+    </ClCompile>
+    <ClCompile Include="Lightmap.cpp">
+      <Filter>Исходные файлы\Lighting</Filter>
+    </ClCompile>
+    <ClCompile Include="Lighting.cpp">
+      <Filter>Исходные файлы\Lighting</Filter>
+    </ClCompile>
+    <ClCompile Include="Block.cpp">
+      <Filter>Исходные файлы\Voxels</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Events.h">
@@ -134,6 +152,18 @@
     <ClInclude Include="file.h">
       <Filter>Файлы заголовков\Files</Filter>
     </ClInclude>
+    <ClInclude Include="LightSolver.h">
+      <Filter>Файлы заголовков\Lighting</Filter>
+    </ClInclude>
+    <ClInclude Include="Lightmap.h">
+      <Filter>Файлы заголовков\Lighting</Filter>
+    </ClInclude>
+    <ClInclude Include="Lighting.h">
+      <Filter>Файлы заголовков\Lighting</Filter>
+    </ClInclude>
+    <ClInclude Include="Block.h">
+      <Filter>Файлы заголовков\Voxels</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="main.glslv">
@@ -157,6 +187,9 @@
     <None Include="world.bin">
       <Filter>Файлы ресурсов</Filter>
     </None>
+    <None Include="minecraft_textures_atlas_blocks.psd">
+      <Filter>Файлы ресурсов</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="img.png">
@@ -166,6 +199,9 @@
       <Filter>Исходные файлы\Graphics\Textures</Filter>
     </Image>
     <Image Include="minecraft_textures_atlas_blocks.png">
+      <Filter>Исходные файлы\Graphics\Textures</Filter>
+    </Image>
+    <Image Include="blocks_minecraft.png">
       <Filter>Исходные файлы\Graphics\Textures</Filter>
     </Image>
   </ItemGroup>

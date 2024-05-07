@@ -7,14 +7,16 @@
 #define CHUNK_VOL (CHUNK_W * CHUNK_H * CHUNK_D)
 
 class voxel;
+class Lightmap;
 
 class Chunk {
 public:
-	int x,y,z;
-	voxel* voxels;
-	bool modified = true;
-	Chunk(int x, int y, int z);
-	~Chunk();
+    int x, y, z;
+    voxel* voxels;
+    Lightmap* lightmap;
+    bool modified = true;
+    Chunk(int x, int y, int z);
+    ~Chunk();
 };
 
 #endif /* VOXELS_CHUNK_H_ */

@@ -17,11 +17,11 @@ public:
 	static bool _cursor_locked;
 	static bool _cursor_started;
 	static int initialize();
-	static void pollEvents();
-	static bool isPressed(int keycode);
-	static bool justPressed(int keycode);
-	static bool isClicked(int button);
-	static bool justClicked(int button);
+	static void pullEvents();
+	static bool pressed(int keycode);
+	static bool jpressed(int keycode);
+	static bool clicked(int button);
+	static bool jclicked(int button);
 	static void toogleCursor();
 };
 
